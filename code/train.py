@@ -27,7 +27,7 @@ parser.add_argument('--batch-size', type=int, default=1000,
                     help='input batch size for training (default: 500)')
 parser.add_argument('--valid-batch-size', type=int, default=1000,
                     help='input batch size for validation (default: 1000)')
-parser.add_argument('--epochs', type=int, default=20,
+parser.add_argument('--epochs', type=int, default=5,
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001,
                     help='learning rate (default: 0.001)')
@@ -41,10 +41,13 @@ parser.add_argument('--save-model', default=1, type=int,
                     help='For Saving the current Model')
 parser.add_argument('--log-interval', type=int, default=10,
                     help='how many batches to wait before logging training status')
-
+parser.add_argument('--type', type=int, default=1,
+                    help='')
+parser.add_argument('--CUDA_NUM', type=int, default=1,
+                    help='')
 args = parser.parse_args()
 use_cuda = not args.no_cuda and torch.cuda.is_available()
-device = torch.device("cuda" if use_cuda else "cpu")
+device = torch.device("cuda:{}".format(args.CUDA_NUM) if use_cuda else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
 train_root = ['utterance', 'correct_response', 'error_response']
@@ -66,7 +69,7 @@ valid_loader = torch.utils.data.DataLoader(
 '''
 if __name__ == '__main__':
     history_list = []
-    config = Config()
+    config = Config(type=args.type)
     model = Model(config)
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
     model = model.to(device)

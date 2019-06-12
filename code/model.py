@@ -29,7 +29,7 @@ import pickle
 '''
 
 class Config():
-    def __init__(self):
+    def __init__(self,type):
         self.max_num_utterance = 10
         self.max_sentence_len = 20
         self.word_embedding_size = 200
@@ -37,6 +37,7 @@ class Config():
         self.GRU2_hidden_size = 50  # GRU2的hidden size
         self.total_words = 218563
         self.v_length = 50
+        self.type = type
 
 embedding_file = '../Data/embedding/final_embedding.pkl'
 
@@ -50,7 +51,7 @@ class Model(nn.Module):
         self.GRU2_hidden_size = config.GRU2_hidden_size
         self.total_words = config.total_words
         self.v_length = config.v_length
-
+        self.type = config.type
         self.word_embedding = nn.Embedding(num_embeddings=self.total_words, embedding_dim=self.word_embedding_size)
         with open(embedding_file, 'rb') as f:
             embedding_matrix = pickle.load(f, encoding="bytes")  # list
@@ -236,10 +237,20 @@ class Model(nn.Module):
         _, x5_final_hidden = self.final_GRU(torch.stack(x5_matching_vectors, dim=1))
         x5_final_hidden = torch.squeeze(x5_final_hidden)
         # (N,v_length)->(N,GRU2_hidden_size)
-
-        L = torch.cat((x1_final_hidden, x2_final_hidden, x3_final_hidden, x4_final_hidden, x5_final_hidden), dim=1)
+        if self.type == 1:
+            L = x1_final_hidden
+        elif self.type == 2:
+            L = x2_final_hidden
+        elif self.type == 3:
+            L = x3_final_hidden
+        elif self.type == 4:
+            L = x4_final_hidden
+        elif self.type == 5:
+            L = x5_final_hidden
+        elif self.type == 6:
+            L = torch.cat((x1_final_hidden, x2_final_hidden, x3_final_hidden, x4_final_hidden, x5_final_hidden), dim=1)
         # batch_size, GRU2_hidden_size
-        logits = self.final_linear(x1_final_hidden)
+        logits = self.final_linear(L)
         y_pred = F.log_softmax(logits, dim=1)
         y_pred_pro = F.softmax(logits, dim=1)
         return y_pred, y_pred_pro
